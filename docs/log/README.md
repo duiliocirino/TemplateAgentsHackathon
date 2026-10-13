@@ -9,7 +9,7 @@ This makes coordination conflicts impossible: nobody ever writes the same file t
 YYYY-MM-DD-HHMM_<handle>_<type>_<headline-slug>.md
 ```
 
-- handle: `human-role-agent` (e.g. `vale-fe-agent`) or `orchestrator`
+- handle: `<name>-<role>-agent` (e.g. `vale-fe-agent`) or `orchestrator`
 - type: `claim | done | block | ask | decide | note | cr`
 - headline: kebab-case, ≤60 chars — if you can't phrase the message this short, there is no message
 - no secrets, IDs, or PII in filenames or bodies — record *where* a value lives, never the value

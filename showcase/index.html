@@ -181,7 +181,7 @@
   <h2><span class="n">02</span>The fix is structural — flip the architecture</h2>
   <p class="lead">v1 relied on discipline ("please append-only, please don't fight over files").
   Discipline doesn't survive 5 concurrent writers. v2 makes shared-file conflicts
-  <b>impossible by construction</b>: every shared write is either a <b>new file</b> or <b>your own file</b>.</p>
+  <b>impossible by construction</b>: every shared write is either a <b>new file</b>, <b>your own file</b>, or a <b>single-writer view</b>.</p>
   <div class="flip">
     <button id="b1" class="on">v1 — shared files</button>
     <button id="b2">v2 — one writer per file</button>
@@ -196,7 +196,7 @@
         <g class="shake"><rect x="640" y="135" width="220" height="90" rx="10" fill="#2a1416" stroke="#ff5252"/>
           <text x="750" y="170" fill="#ff5252" text-anchor="middle">PLAN.md</text>
           <text x="750" y="190" fill="#ff5252" text-anchor="middle">+ DISCUSSION.md</text>
-          <text x="750" y="211" fill="#d2d2d2" text-anchor="middle" font-size="11">← 5 writers, 1 file each</text></g>
+          <text x="750" y="211" fill="#d2d2d2" text-anchor="middle" font-size="11">← 5 writers, 2 shared files</text></g>
       </g>
     </svg>
     <svg id="svg2" class="hidden" viewBox="0 0 900 400">
@@ -306,7 +306,7 @@
   <div class="cmd"><span>git clone … && cd repo && .\scripts\setup.ps1</span><button data-c>copy</button></div>
   <div class="cmd"><span>I am &lt;name&gt;, &lt;role&gt;. Follow AGENTS.md.</span><button data-c>copy</button></div>
   <div class="cmd"><span>You are the orchestrator. Follow docs/ORCHESTRATOR.md.</span><button data-c>copy</button></div>
-  <div class="cmd"><span>scripts/sync</span><button data-c>copy</button></div>
+  <div class="cmd"><span>.\scripts\sync.ps1    # or: scripts/sync.sh</span><button data-c>copy</button></div>
   <p style="color:var(--dim);font-size:13px;margin-top:10px">The orchestrator is the cheapest session by design
   (headlines + git diffs, ~2–4k tokens per refresh) — its real requirement is uptime, not credits. If it dies,
   anyone boots a new one with line 3. Nothing is lost: the board is a cache.</p>
@@ -395,7 +395,7 @@ const SIM=[
  {a:'fab',k:'commit',t:'feat(db): waitlist + promotion-job schema, migrations'},
  {a:'val',k:'done',f:'2026-09-18-1631_vale-fe-agent_done_T12-14-tests-a1f9c2.md',cap:'The AGENT posts the done entry itself — commit + log + status update in one push. The 7× "aggiorna i docs" nag never happens again.'},
  {a:'fab',k:'done',f:'2026-09-18-1636_fabio-db-agent_done_T8-36-repo-tests-9c3e11.md',cap:'The DB workstream closes the same way — evidence posted by the agent, verified by the orchestrator against the migration commits. Four workstreams, one board.'},
- {a:'orch',k:'board',board:{t:'16:40',work:['vale → T12 ratified'],done:['T12 ✓ verified vs a1f9c2 (14 tests)','T8 ✓ verified vs 9c3e11 (36 repo tests)'],block:['—'],next:['T10','T11','T14'],head:['claim_T12','claim_T8','done_T12','done_T8']},cap:'Refresh ≤10 min: git log --since + log HEADLINES + status files. ~2–4k tokens, not 81k. "Done" is verified against git evidence, not taken on faith.'},
+ {a:'orch',k:'board',board:{t:'16:40',work:['vale → T12 done, picking next'],done:['T12 ✓ verified vs a1f9c2 (14 tests)','T8 ✓ verified vs 9c3e11 (36 repo tests)'],block:['—'],next:['T10','T11','T14'],head:['claim_T12','claim_T8','done_T12','done_T8']},cap:'Refresh ≤10 min: git log --since + log HEADLINES + status files. ~2–4k tokens, not 81k. "Done" is verified against git evidence, not taken on faith.'},
  {a:'ste',k:'claim',f:'2026-09-18-1648_stefano-auth-agent_claim_T11-entra-integration.md'},
  {a:'ste',k:'block',f:'2026-09-18-1702_stefano-auth-agent_block_T11-need-tenant-id-from-organizers-pdf.md',cap:'Note the headline: it says WHERE the value lives, never the value. The Entra-ID leak into the shared log never happens again.'},
  {a:'ste',k:'ask',f:'2026-09-18-1704_stefano-auth-agent_ask-orchestrator_T11-live-config-ownership.md'},
@@ -403,15 +403,15 @@ const SIM=[
  {a:'cr',k:'cr',t:'⚡ 17:10 — organizers send a CHANGE REQUEST',cap:'It always happens (it hit at 17:10 on event day; we improvised at 21:51). In v2 it triggers a playbook, not a panic.'},
  {a:'orch',k:'cr',f:'2026-09-18-1712_orchestrator_cr_manager-attendance-scope.md'},
  {a:'orch',k:'decide',f:'2026-09-18-1718_orchestrator_decide_add-T15-T17-CUT-localization.md',cap:'CR playbook: impact analysis → add tasks, CUT scope (never quality), one decide per affected task. Saying what we DROP is the point.'},
- {a:'orch',k:'board',board:{t:'17:20',work:['vale → T17 (new, from CR)','stefano → T11','duilio → T15 (new, from CR)'],done:['T12 ✓'],block:['T11 live-config: decided 17:08'],next:['T10','T14'],head:['cr_...','decide_add-T15-T17','decide_T11']},cap:'Everyone sees their new next step on the board at the next sync. No emergency meeting.'},
+ {a:'orch',k:'board',board:{t:'17:20',work:['vale → T17 (new, from CR)','stefano → T11','duilio → T15 (new, from CR)','fab → attendance persistence (from CR)'],done:['T12 ✓'],block:['T11 live-config: decided 17:08'],next:['T10','T14'],head:['cr_...','decide_add-T15-T17','decide_T11']},cap:'Everyone sees their new next step on the board at the next sync. No emergency meeting.'},
  {a:'dui',k:'commit',t:'feat(api): attendance metrics + XLSX export',cap:'Duilio runs two sessions: the orchestrator chat AND his own backend session — separate handles keep attribution honest.'},
  {a:'mic',k:'commit',t:'docs(analysis): CR functional analysis + traceability matrix'},
  {a:'mic',k:'claim',f:'2026-09-18-1740_michele-fa-agent_claim_T14-final-delivery-checks.md'},
  {a:'val',k:'claim',f:'2026-09-18-1741_vale-fe-agent_claim_T14-final-delivery-checks.md',cap:'Double claim! Optimistic concurrency: collisions are detected and resolved, not prevented by queueing.'},
  {a:'orch',k:'decide',f:'2026-09-18-1746_orchestrator_decide_T14-michele-first-claim-wins.md',cap:'First claim wins unless decided otherwise. Vale sees it on her next sync and moves on — 5 minutes of loss, not a meeting.'},
  {a:'orch',k:'warn',t:'⚠ orchestrator session dies',cap:'Bus factor = 1, and it does not matter. The orchestrator is stateless: everything regenerates from git + log + status.'},
- {a:'orch',k:'board',board:{t:'18:05',work:['vale → T17','stefano → T11','michele → T14','duilio → T15 closing'],done:['T12 ✓','T8 ✓','T15 ✓ verified'],block:['—'],next:['T10'],head:['decide_T14','done_T15','claim_T14']},cap:'Anyone boots a replacement with one line: "You are the orchestrator. Follow docs/ORCHESTRATOR.md." The board is a cache, not a database.'},
- {a:'end',k:'end',t:'DAY COMPLETE',cap:'0 coordination conflicts · 0 human git prompts · ~3k tokens per full-team sync · change request absorbed in ~15 min. That is the whole pitch.'},
+ {a:'orch',k:'board',board:{t:'18:05',work:['vale → T17','stefano → T11','michele → T14','duilio → T15 closing','fab → attendance persistence'],done:['T12 ✓','T8 ✓','T15 ✓ verified'],block:['—'],next:['T10'],head:['decide_T14','done_T15','claim_T14']},cap:'Anyone boots a replacement with one line: "You are the orchestrator. Follow docs/ORCHESTRATOR.md." The board is a cache, not a database.'},
+ {a:'end',k:'end',t:'DAY COMPLETE',cap:'0 file conflicts · 1 double-claim caught and resolved in 6 min · 0 human git prompts · ~3k tokens per full-team sync · change request absorbed in ~10 min. That is the whole pitch.'},
 ];
 let si=0,timer=null;
 const feed=document.getElementById('feed'),comm=document.getElementById('commits'),

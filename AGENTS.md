@@ -6,7 +6,7 @@ The *how* is here. The *what* lives in [docs/BOARD.md](docs/BOARD.md) and [docs/
 ## Who you are — declare at session start
 
 First message of every session: `I am <name>, <role>. Follow AGENTS.md.`
-Your handle = `<git-user>-<role>-agent` (derive the human part from `git config user.name`, e.g. `v-froio-fe-agent`).
+Your handle = `<name>-<role>-agent` (e.g. `vale-fe-agent`, `fabio-db-agent`). `git config user.name` tells you whose machine you are on — confirm it matches the declared name.
 The orchestrator session boots differently: `You are the orchestrator. Follow docs/ORCHESTRATOR.md.`
 
 ## Startup ritual — every session, every machine, no exceptions
