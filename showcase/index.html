@@ -36,12 +36,14 @@
   .stat .l{color:var(--soft);font-size:13px;margin-top:4px}
   .stat .e{color:var(--dim);font-size:11px;margin-top:6px}
   .daybar{margin-top:28px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
-  .daybar .track{position:relative;height:8px;background:var(--line);border-radius:4px;margin:26px 6px 8px}
+  .daybar .track{position:relative;height:8px;background:var(--line);border-radius:4px;margin:26px 6px 34px}
   .daybar .tick{position:absolute;top:-4px;transform:translate(-50%,0);width:16px;height:16px;border-radius:50%;
     background:var(--green);border:3px solid var(--bg)}
   .daybar .tick.red{background:var(--red)}
   .daybar .tick span{position:absolute;top:-26px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--soft);white-space:nowrap;font-family:var(--mono)}
   .daybar .tick.below span{top:auto;bottom:-26px}
+  .daybar .tick.start span{left:0;transform:none}
+  .daybar .tick.end span{left:auto;right:0;transform:none}
   /* flip */
   .flip{display:flex;gap:8px;justify-content:center;margin:18px 0}
   .flip button{background:var(--panel);color:var(--soft);border:1px solid var(--line);border-radius:999px;
@@ -167,11 +169,11 @@
   <div class="daybar">
     <div style="font-size:13px;color:var(--dim)">Event day — and the moment that decided the finals design:</div>
     <div class="track">
-      <div class="tick" style="left:2%"><span>15:10 start</span></div>
+      <div class="tick start" style="left:2%"><span>15:10 start</span></div>
       <div class="tick" style="left:28%"><span>16:23 scaffold lands</span></div>
       <div class="tick red" style="left:48%"><span>17:10 CHANGE REQUEST</span></div>
-      <div class="tick red below" style="left:70%"><span>18:48 still resolving md conflicts</span></div>
-      <div class="tick red below" style="left:96%"><span>21:51 orchestrator improvised</span></div>
+      <div class="tick red below" style="left:58%"><span>18:48 still resolving md conflicts</span></div>
+      <div class="tick red end below" style="left:96%"><span>21:51 orchestrator improvised</span></div>
     </div>
   </div>
 </section>
