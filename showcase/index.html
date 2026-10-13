@@ -189,17 +189,17 @@
   <div class="storm">
     <div class="badge bad" id="badge1">CONFLICT ×3 · 34/45 commits · 9 merge-noise</div>
     <div class="badge good hidden" id="badge2">0 conflicts · by construction</div>
-    <svg id="svg1" viewBox="0 0 900 340">
+    <svg id="svg1" viewBox="0 0 900 400">
       <g font-family="monospace" font-size="13">
         <g id="l1"></g>
         <g id="w1"></g>
-        <g class="shake"><rect x="640" y="120" width="220" height="90" rx="10" fill="#2a1416" stroke="#ff5252"/>
-          <text x="750" y="155" fill="#ff5252" text-anchor="middle">PLAN.md</text>
-          <text x="750" y="175" fill="#ff5252" text-anchor="middle">+ DISCUSSION.md</text>
-          <text x="750" y="196" fill="#d2d2d2" text-anchor="middle" font-size="11">← 5 writers, 1 file each</text></g>
+        <g class="shake"><rect x="640" y="135" width="220" height="90" rx="10" fill="#2a1416" stroke="#ff5252"/>
+          <text x="750" y="170" fill="#ff5252" text-anchor="middle">PLAN.md</text>
+          <text x="750" y="190" fill="#ff5252" text-anchor="middle">+ DISCUSSION.md</text>
+          <text x="750" y="211" fill="#d2d2d2" text-anchor="middle" font-size="11">← 5 writers, 1 file each</text></g>
       </g>
     </svg>
-    <svg id="svg2" class="hidden" viewBox="0 0 900 340">
+    <svg id="svg2" class="hidden" viewBox="0 0 900 400">
       <g font-family="monospace" font-size="13">
         <g id="l2"></g>
         <g id="f2"></g>
@@ -339,7 +339,7 @@ const io=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return
 document.querySelectorAll('[data-count]').forEach(el=>io.observe(el));
 
 // ---------- conflict storm ----------
-const writers=['vale','stef','michele','fabio','duilio'];
+const writers=['vale','stef','mich','fab','dui'];
 const wc=['#0ab03f','#4aa3ff','#ffb454','#b48cff','#e6e6e6'];
 const WY=[50,115,180,245,310];
 function place(gSel){const g=document.querySelector(gSel);g.innerHTML='';
@@ -347,14 +347,20 @@ function place(gSel){const g=document.querySelector(gSel);g.innerHTML='';
     <text x="90" y="${y+4}" font-size="11" fill="${wc[i]}" text-anchor="middle">${writers[i]}</text>`;});}
 place('#w1');place('#w2');
 const l1=document.querySelector('#l1');
-WY.forEach((y,i)=>{l1.innerHTML+=`<line class="ln" x1="114" y1="${y}" x2="640" y2="165" stroke="${wc[i]}" stroke-width="2"/>`;});
+WY.forEach((y,i)=>{l1.innerHTML+=`<line class="ln" x1="114" y1="${y}" x2="640" y2="180" stroke="${wc[i]}" stroke-width="2"/>`;});
 const l2=document.querySelector('#l2'),f2=document.querySelector('#f2');
-const T=[[640,40,'log/ — new files, anyone'],[640,110,'status/<you>.md — owner only'],[640,180,'BOARD.md — orchestrator only'],[640,250,'tasks/ — orchestrator only']];
+const T=[[640,30,'log/ — new files, anyone'],[640,100,'status/<you>.md — owner only'],[640,170,'code — within task scope'],[640,240,'BOARD.md — orchestrator only'],[640,310,'tasks/ — orchestrator only']];
 T.forEach(t=>{f2.innerHTML+=`<rect x="${t[0]}" y="${t[1]}" width="220" height="44" rx="8" fill="#10161d" stroke="#232d38"/>
   <text x="${t[0]+110}" y="${t[1]+27}" font-size="11" fill="#d2d2d2" text-anchor="middle">${t[2]}</text>`;});
-WY.forEach((y,i)=>{const a=i<4?T[0]:T[2],b=i<4?T[1]:T[3];
-  l2.innerHTML+=`<line class="ln" x1="114" y1="${y}" x2="640" y2="${a[1]+22}" stroke="${wc[i]}" stroke-width="2"/>`;
-  l2.innerHTML+=`<line class="ln" x1="114" y1="${y}" x2="640" y2="${b[1]+22}" stroke="${wc[i]}" stroke-width="2" opacity=".55"/>`;});
+WY.forEach((y,i)=>{
+  l2.innerHTML+=`<line class="ln" x1="114" y1="${y}" x2="640" y2="${T[0][1]+22}" stroke="${wc[i]}" stroke-width="2"/>`;
+  l2.innerHTML+=`<line class="ln" x1="114" y1="${y}" x2="640" y2="${T[1][1]+22}" stroke="${wc[i]}" stroke-width="2" opacity=".55"/>`;
+  l2.innerHTML+=`<line class="ln" x1="114" y1="${y}" x2="640" y2="${T[2][1]+22}" stroke="${wc[i]}" stroke-width="2" opacity=".35"/>`;
+  if(i===4){
+    l2.innerHTML+=`<line class="ln" x1="114" y1="${y}" x2="640" y2="${T[3][1]+22}" stroke="${wc[i]}" stroke-width="2"/>`;
+    l2.innerHTML+=`<line class="ln" x1="114" y1="${y}" x2="640" y2="${T[4][1]+22}" stroke="${wc[i]}" stroke-width="2"/>`;
+  }});
+f2.innerHTML+=`<text x="90" y="352" font-size="10" fill="#8a93a0" text-anchor="middle">2 sessions: backend + orchestrator</text>`;
 const b1=document.getElementById('b1'),b2=document.getElementById('b2');
 function flip(v2){b1.classList.toggle('on',!v2);b2.classList.toggle('on',v2);
   document.getElementById('svg1').classList.toggle('hidden',v2);
