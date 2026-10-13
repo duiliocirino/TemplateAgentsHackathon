@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# working artifacts from chat-export analysis (contain raw teammate prompts - never push)
+analysis/prompts_*.txt

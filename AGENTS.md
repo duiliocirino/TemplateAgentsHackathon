@@ -1,47 +1,56 @@
-# AGENTS.md
+# AGENTS.md — multi-agent protocol (v2)
 
-Working protocol for AI agents and humans in this repository.
-This file is short on purpose: it defines the *how*. The *what* lives in [docs/PLAN.md](docs/PLAN.md).
+Protocol for humans + AI agents working in parallel on this repo, from any machine, any tool.
+The *how* is here. The *what* lives in [docs/BOARD.md](docs/BOARD.md) and [docs/tasks/](docs/tasks/).
 
-## On startup — every session, every machine, no exceptions
+## Who you are — declare at session start
 
-1. `git pull --rebase`
-2. Read `docs/PLAN.md` in full (goal, current state, task ownership).
-3. Read the last ~50 lines of `docs/DISCUSSION.md` (recent decisions and handoffs).
-4. Skim `git log --oneline -20` (what actually changed recently).
+First message of every session: `I am <name>, <role>. Follow AGENTS.md.`
+Your handle = `<git-user>-<role>-agent` (derive the human part from `git config user.name`, e.g. `v-froio-fe-agent`).
+The orchestrator session boots differently: `You are the orchestrator. Follow docs/ORCHESTRATOR.md.`
 
-Only then start working. Recent entries and commits tell you what your teammates and other agents are doing.
+## Startup ritual — every session, every machine, no exceptions
 
-## Coordination model
+1. Run `scripts/sync` (pull --rebase --autostash + status + recent log headlines + recent commits).
+2. Read `docs/BOARD.md` — the current state. Generated; never hand-edit it.
+3. Read your `docs/status/<handle>.md` if it exists — your handoff from the last session.
+4. Read the task files you own in `docs/tasks/`.
 
-- **One task, one owner.** Owners are named in `docs/PLAN.md` (human name or agent handle).
-- **Claim** = set the owner in PLAN.md + append a claim entry to DISCUSSION.md + commit.
-- **Complete** = mark the task done in PLAN.md + update "Current state" + append a completion entry (what changed, why, what's left) + commit.
-- **Do not touch** files that are the primary target of someone else's active task. If you must, coordinate in DISCUSSION.md first.
-- **Small, frequent commits to `main`.** Every commit leaves the repo in a consistent state. The commit log is a first-class communication channel: write it like someone else will read it 10 minutes from now.
-- **Stale work is re-claimable.** If an owner went quiet and a task blocks progress, note it in DISCUSSION.md, then re-claim it.
+Then work. Do not read more than this unless a log headline tells you to. Context is a budget, not a dump.
 
-## Identity
+## Write matrix — who may write what
 
-Use one stable, short handle everywhere (DISCUSSION.md, PLAN.md owners, commit body):
+| Artifact | Writers | Rule |
+|---|---|---|
+| `docs/log/<new file>` | anyone | create only, never edit or delete |
+| `docs/status/<handle>.md` | that handle only | your memory + handoff |
+| `docs/tasks/*` | orchestrator only | definitions frozen during the day |
+| `docs/BOARD.md` | orchestrator only | cache, regenerated every ≤10 min |
+| code | everyone | only inside your task's `Scope:` |
 
-- Humans: your name.
-- Agents: pick a handle (e.g. `agent-forge`) and keep it for the day.
-- Note it in the commit body: `Agent: agent-forge` (or `By: yourname`).
+Never edit a file another handle owns. Need something changed there? Write a log entry instead.
 
-## Commit style
+## Log grammar — the filename IS the message
 
-- Imperative subject, ≤ 70 chars: `add login endpoint`, `fix: crash on empty config`
-- Body (optional, encouraged): what + why, and which task it addresses: `Task: T4`
+`docs/log/YYYY-MM-DD-HHMM_<handle>_<type>_<headline-slug>.md`
+type ∈ `claim | done | block | ask | decide | note | cr`. Headline: kebab-case, ≤60 chars.
+Body ≤10 lines: Task, Evidence (commits/tests), What, Next, Needs.
+No secrets, IDs, or PII in filenames or bodies — record *where* a value lives, never the value.
 
-## Keeping the coordination files healthy
+## Git is your job — autonomously, no human prompting
 
-- **PLAN.md** is the source of truth: when reality drifts from it, fix it in the same commit as the change. Keep "Current state" to 3 short lines.
-- **DISCUSSION.md** is append-only: new entries at the bottom, never rewrite or delete old ones.
-- Both files must stay readable in under 2 minutes. When DISCUSSION.md grows long, distill durable decisions into PLAN.md ("Decisions") and move the old section to `docs/archive/`.
+- Run `scripts/sync` before starting and before every push.
+- Commit + push each completed unit of work yourself, unprompted. Small and often.
+- After each task unit: write your log entry (`done`/`block`) + update your status file, same push.
+- Never force-push. Never edit old log files.
+
+## Claims — self-service, optimistic
+
+Want a task: write a `claim` log entry + update your status file, start immediately.
+The orchestrator ratifies it on the board within ~10 min. First claim wins unless a `decide` entry says otherwise.
 
 ## Hard rules
 
-- No force-pushes to `main`.
-- No secrets in the repo (`.env` stays ignored).
-- When in doubt, don't guess silently — write the question in DISCUSSION.md.
+- BOARD.md is the only shared status file and it is a cache — if it's stale or the orchestrator is down, restart the orchestrator (anyone: new session + "Follow docs/ORCHESTRATOR.md").
+- Organizers WILL change requirements mid-event. Do not react ad hoc: the orchestrator runs the CR playbook in docs/ORCHESTRATOR.md.
+- When in doubt, write an `ask` log entry instead of guessing silently.

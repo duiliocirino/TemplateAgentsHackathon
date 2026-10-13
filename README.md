@@ -1,44 +1,46 @@
-# TemplateAgentsHackathon
+# TemplateAgentsHackathon — v2
 
-Team template for building with AI agents in parallel. Humans and agents share one repo, one plan, one log — no other infrastructure.
+Coordination template for a team of humans + AI agents working in parallel on one repo,
+from different machines, under time pressure. Hackathon-tested, finals-tuned.
 
-## The idea
+## The one-minute idea
 
-A single agent gets its context from one conversation. Distributed agents (different laptops, different tools, parallel work) can't share conversations, so the shared context lives **in the repo**:
+Shared state has exactly one writer per file, so coordination conflicts are impossible **by construction**, not by discipline:
 
-| File | Role |
-|------|------|
-| [`AGENTS.md`](AGENTS.md) | The protocol. Read automatically by agents (pi, Claude Code, Codex, …) on startup. |
-| [`docs/PLAN.md`](docs/PLAN.md) | The plan: goal, current state, tasks, owners. |
-| [`docs/DISCUSSION.md`](docs/DISCUSSION.md) | Append-only log: claims, decisions, handoffs. |
+- anyone **creates new files** in `docs/log/` — the filename IS the message (`2026-09-18-1805_valeria-fe-agent_block_T10-BFF-path-mismatch.md`)
+- each handle owns one file in `docs/status/` — its memory and session handoff
+- the **orchestrator** alone writes `docs/BOARD.md` (current state, regenerated every ≤10 min) and `docs/tasks/` (the plan)
+- git is the transport, and **agents run git themselves** — humans don't babysit commits
 
-Git is the transport: **pull → read the three files → work → update the files → commit**.
-The commit log is the feed of *what changed*; the docs are the feed of *why, and what's next*.
+## Setup (once per clone)
 
-## Quickstart (per person / per agent)
-
-1. `git clone` the repo (or `git pull --rebase`)
-2. Read `AGENTS.md`, then `docs/PLAN.md`, then the tail of `docs/DISCUSSION.md`
-3. Claim a task: set the owner in PLAN.md, log it in DISCUSSION.md, commit
-4. Work in small, frequent commits to `main`
-5. Complete: update PLAN.md ("Current state" + task), log it in DISCUSSION.md, commit
-
-## Parallel agents on one machine
-
-Give each agent its own worktree and a short-lived branch:
-
-```bash
-git worktree add -b agent-forge ../worktrees/agent-forge
-# ... work and commit inside the worktree ...
-git push origin agent-forge
-git checkout main && git merge --ff-only agent-forge && git push
+```powershell
+.\scripts\setup.ps1    # or: scripts/setup.sh
 ```
 
-Across machines it's just clones of the same repo: pull often, push small commits.
+## Day-one flow
 
-## Rules of thumb
+1. Each person starts their agent session with: `I am <name>, <role>. Follow AGENTS.md.`
+2. One person runs a dedicated orchestrator chat, open all day: `You are the orchestrator. Follow docs/ORCHESTRATOR.md.`
+3. The orchestrator publishes task files in `docs/tasks/` from the brief; the team self-claims via log entries.
+4. Agents work → commit+push → log entry → status update, autonomously.
+5. The orchestrator refreshes the board every ≤10 min and runs the CR playbook when the organizers change requirements mid-event (they will).
 
-- One task, one owner — that's what prevents two agents from colliding.
-- PLAN.md and DISCUSSION.md must stay readable in under 2 minutes; prune, don't grow.
-- Real-time chat stays in Slack/Discord; the repo log is for durable things only.
-- The design works at commit granularity (minutes), not seconds: coordinate before editing the same files.
+## Files
+
+| Path | What | Writer |
+|---|---|---|
+| `AGENTS.md` | the protocol, auto-read by every coding agent | — (frozen during the day) |
+| `docs/ORCHESTRATOR.md` | orchestrator identity, refresh cycle, CR playbook | — |
+| `docs/BOARD.md` | current state: working/done/blocked/next | orchestrator only |
+| `docs/tasks/` | task definitions with scope + definition of done | orchestrator only |
+| `docs/log/` | one file per message to the team (grammar in its README) | anyone, create-only |
+| `docs/status/` | one file per handle: working/done/blocked/handoff | owner only |
+| `scripts/sync` | pull --rebase --autostash + status + feed, one command | — |
+
+## Why this design (learned the hard way, 18 Sep)
+
+- One shared PLAN.md + DISCUSSION.md with 5 concurrent writers: 75% of commits touched them, 3 rounds of md-conflict cleanup, ~1/3 of all human prompts spent on coordination overhead.
+- Humans prompting "commit and push please" 23 times = humans as the sync bottleneck. In v2, git is the agents' job.
+- Re-reading the whole plan + log every turn ≈ 81k prompt tokens/turn. Headline-first files keep a full team sync under ~3k.
+- The change request hit at 2/3 time and the orchestrator role was improvised at 21:51. In v2 it exists at minute 0, with a playbook.
