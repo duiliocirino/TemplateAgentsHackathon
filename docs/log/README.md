@@ -19,7 +19,7 @@ YYYY-MM-DD-HHMM_<handle>_<type>_<headline-slug>.md
 ```
 2026-09-18-1801_vale-fe-agent_done_T10-waitlist-notification-ui.md
 2026-09-18-1805_vale-fe-agent_block_T10-live-BFF-path-naming-mismatch.md
-2026-09-18-1812_stefano-fs-agent_ask-orchestrator_T11-entra-config-who-owns.md
+2026-09-18-1812_stefano-auth-agent_ask-orchestrator_T11-entra-config-who-owns.md
 2026-09-18-1815_orchestrator_decide_T11-stefano-keeps-T2-closes.md
 ```
 

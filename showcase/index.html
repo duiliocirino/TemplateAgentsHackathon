@@ -283,8 +283,8 @@
       <div><label>timestamp (auto)</label><input id="g-ts" class="mono" readonly></div>
       <div><label>handle</label>
         <select id="g-h">
-          <option>vale-fe-agent</option><option>stefano-fs-agent</option>
-          <option>michele-be-agent</option><option>fabio-db-agent</option><option>orchestrator</option>
+          <option>vale-fe-agent</option><option>stefano-auth-agent</option>
+          <option>michele-fa-agent</option><option>fabio-db-agent</option><option>orchestrator</option>
         </select></div>
       <div><label>type</label>
         <select id="g-t">
@@ -375,31 +375,36 @@ document.querySelectorAll('.chip').forEach(c=>{const w=c.dataset.w;
   c.onmouseleave=()=>document.querySelectorAll('td.hl').forEach(td=>td.classList.remove('hl'));});
 
 // ---------- simulation ----------
-const A={val:{n:'vale-fe-agent',c:'#0ab03f'},ste:{n:'stefano-fs-agent',c:'#4aa3ff'},
-  mic:{n:'michele-be-agent',c:'#ffb454'},orch:{n:'orchestrator',c:'#e6e6e6'},cr:{n:'organizers',c:'#ff5252'}};
-const B0={t:'16:00',work:['—'],done:['—'],block:['—'],next:['T10','T11','T12','T14'],head:[]};
+const A={val:{n:'vale-fe-agent',c:'#0ab03f'},ste:{n:'stefano-auth-agent',c:'#4aa3ff'},
+  mic:{n:'michele-fa-agent',c:'#ffb454'},fab:{n:'fabio-db-agent',c:'#b48cff'},
+  dui:{n:'duilio-be-agent',c:'#45d0b8'},orch:{n:'orchestrator',c:'#e6e6e6'},cr:{n:'organizers',c:'#ff5252'}};
+const B0={t:'16:00',work:['—'],done:['—'],block:['—'],next:['T8','T10','T11','T12','T14'],head:[]};
 function boardHTML(b){return `# BOARD — refresh ${b.t}\n## Working now\n  ${b.work.join('\n  ')||'(none)'}\n## Done since last refresh\n  ${b.done.join('\n  ')||'(none)'}\n## Blocked / needs decision\n  ${b.block.join('\n  ')||'(none)'}\n## Unclaimed, ready\n  ${b.next.join('  ')||'(none)'}\n## Recent headlines\n  ${b.head.slice(-6).join('\n  ')||'(none)'}`;}
 const SIM=[
  {a:'orch',k:'note',t:'publish 18 task files → docs/tasks/',cap:'Minute 0 — the orchestrator publishes tasks with scope + definition-of-done. The team starts from a draft, not a blank page.'},
  {a:'val',k:'claim',f:'2026-09-18-1605_vale-fe-agent_claim_T12-attendance-tab.md',cap:'Self-service claim: write it, start immediately. No assignment round-trip, no waiting.'},
+ {a:'fab',k:'claim',f:'2026-09-18-1606_fabio-db-agent_claim_T8-waitlist-outbox-persistence.md'},
  {a:'val',k:'commit',t:'feat(web): attendance tab shell'},
  {a:'val',k:'commit',t:'test(web): 14 tests pass'},
+ {a:'fab',k:'commit',t:'feat(db): waitlist + promotion-job schema, migrations'},
  {a:'val',k:'done',f:'2026-09-18-1631_vale-fe-agent_done_T12-14-tests-a1f9c2.md',cap:'The AGENT posts the done entry itself — commit + log + status update in one push. The 7× "aggiorna i docs" nag never happens again.'},
- {a:'orch',k:'board',board:{t:'16:40',work:['vale → T12 ratified'],done:['T12 ✓ verified vs a1f9c2 (14 tests)'],block:['—'],next:['T10','T11','T14'],head:['claim_T12','done_T12']},cap:'Refresh ≤10 min: git log --since + log HEADLINES + status files. ~2–4k tokens, not 81k. "Done" is verified against git evidence, not taken on faith.'},
- {a:'ste',k:'claim',f:'2026-09-18-1648_stefano-fs-agent_claim_T11-entra-integration.md'},
- {a:'ste',k:'block',f:'2026-09-18-1702_stefano-fs-agent_block_T11-need-tenant-id-from-organizers-pdf.md',cap:'Note the headline: it says WHERE the value lives, never the value. The Entra-ID leak into the shared log never happens again.'},
- {a:'ste',k:'ask',f:'2026-09-18-1704_stefano-fs-agent_ask-orchestrator_T11-live-config-ownership.md'},
+ {a:'fab',k:'done',f:'2026-09-18-1636_fabio-db-agent_done_T8-36-repo-tests-9c3e11.md',cap:'The DB workstream closes the same way — evidence posted by the agent, verified by the orchestrator against the migration commits. Four workstreams, one board.'},
+ {a:'orch',k:'board',board:{t:'16:40',work:['vale → T12 ratified'],done:['T12 ✓ verified vs a1f9c2 (14 tests)','T8 ✓ verified vs 9c3e11 (36 repo tests)'],block:['—'],next:['T10','T11','T14'],head:['claim_T12','claim_T8','done_T12','done_T8']},cap:'Refresh ≤10 min: git log --since + log HEADLINES + status files. ~2–4k tokens, not 81k. "Done" is verified against git evidence, not taken on faith.'},
+ {a:'ste',k:'claim',f:'2026-09-18-1648_stefano-auth-agent_claim_T11-entra-integration.md'},
+ {a:'ste',k:'block',f:'2026-09-18-1702_stefano-auth-agent_block_T11-need-tenant-id-from-organizers-pdf.md',cap:'Note the headline: it says WHERE the value lives, never the value. The Entra-ID leak into the shared log never happens again.'},
+ {a:'ste',k:'ask',f:'2026-09-18-1704_stefano-auth-agent_ask-orchestrator_T11-live-config-ownership.md'},
  {a:'orch',k:'decide',f:'2026-09-18-1708_orchestrator_decide_T11-stefano-keeps-live-config.md',cap:'Any ask older than one cycle gets a decide. Nobody idles waiting for a human to remember to ask a human.'},
  {a:'cr',k:'cr',t:'⚡ 17:10 — organizers send a CHANGE REQUEST',cap:'It always happens (it hit at 17:10 on event day; we improvised at 21:51). In v2 it triggers a playbook, not a panic.'},
  {a:'orch',k:'cr',f:'2026-09-18-1712_orchestrator_cr_manager-attendance-scope.md'},
  {a:'orch',k:'decide',f:'2026-09-18-1718_orchestrator_decide_add-T15-T17-CUT-localization.md',cap:'CR playbook: impact analysis → add tasks, CUT scope (never quality), one decide per affected task. Saying what we DROP is the point.'},
- {a:'orch',k:'board',board:{t:'17:20',work:['vale → T17 (new, from CR)','stefano → T11','michele → T15 (new, from CR)'],done:['T12 ✓'],block:['T11 live-config: decided 17:08'],next:['T10','T14'],head:['cr_...','decide_add-T15-T17','decide_T11']},cap:'Everyone sees their new next step on the board at the next sync. No emergency meeting.'},
- {a:'mic',k:'commit',t:'feat(api): attendance metrics + XLSX'},
- {a:'mic',k:'claim',f:'2026-09-18-1740_michele-be-agent_claim_T14-final-delivery-checks.md'},
+ {a:'orch',k:'board',board:{t:'17:20',work:['vale → T17 (new, from CR)','stefano → T11','duilio → T15 (new, from CR)'],done:['T12 ✓'],block:['T11 live-config: decided 17:08'],next:['T10','T14'],head:['cr_...','decide_add-T15-T17','decide_T11']},cap:'Everyone sees their new next step on the board at the next sync. No emergency meeting.'},
+ {a:'dui',k:'commit',t:'feat(api): attendance metrics + XLSX export',cap:'Duilio runs two sessions: the orchestrator chat AND his own backend session — separate handles keep attribution honest.'},
+ {a:'mic',k:'commit',t:'docs(analysis): CR functional analysis + traceability matrix'},
+ {a:'mic',k:'claim',f:'2026-09-18-1740_michele-fa-agent_claim_T14-final-delivery-checks.md'},
  {a:'val',k:'claim',f:'2026-09-18-1741_vale-fe-agent_claim_T14-final-delivery-checks.md',cap:'Double claim! Optimistic concurrency: collisions are detected and resolved, not prevented by queueing.'},
  {a:'orch',k:'decide',f:'2026-09-18-1746_orchestrator_decide_T14-michele-first-claim-wins.md',cap:'First claim wins unless decided otherwise. Vale sees it on her next sync and moves on — 5 minutes of loss, not a meeting.'},
  {a:'orch',k:'warn',t:'⚠ orchestrator session dies',cap:'Bus factor = 1, and it does not matter. The orchestrator is stateless: everything regenerates from git + log + status.'},
- {a:'orch',k:'board',board:{t:'18:05',work:['vale → T17','stefano → T11','michele → T14'],done:['T12 ✓','T15 ✓ verified'],block:['—'],next:['T10'],head:['decide_T14','done_T15','claim_T14']},cap:'Anyone boots a replacement with one line: "You are the orchestrator. Follow docs/ORCHESTRATOR.md." The board is a cache, not a database.'},
+ {a:'orch',k:'board',board:{t:'18:05',work:['vale → T17','stefano → T11','michele → T14','duilio → T15 closing'],done:['T12 ✓','T8 ✓','T15 ✓ verified'],block:['—'],next:['T10'],head:['decide_T14','done_T15','claim_T14']},cap:'Anyone boots a replacement with one line: "You are the orchestrator. Follow docs/ORCHESTRATOR.md." The board is a cache, not a database.'},
  {a:'end',k:'end',t:'DAY COMPLETE',cap:'0 coordination conflicts · 0 human git prompts · ~3k tokens per full-team sync · change request absorbed in ~15 min. That is the whole pitch.'},
 ];
 let si=0,timer=null;
