@@ -172,11 +172,11 @@
       <div class="tick start" style="left:2%"><span>15:10 start</span></div>
       <div class="tick" style="left:28%"><span>16:23 scaffold lands</span></div>
       <div class="tick red" style="left:48%"><span>17:10 CHANGE REQUEST</span></div>
-      <div class="tick red" style="left:64%"><span>19:00 team leaves</span></div>
+      <div class="tick red" style="left:66%"><span>19:00 challenge ends</span></div>
       <div class="tick red below" style="left:58%"><span>18:48 still resolving md conflicts</span></div>
       <div class="tick red end below" style="left:96%"><span>21:51 orchestrator improvised</span></div>
     </div>
-    <div style="font-size:12px;color:var(--dim);margin-top:6px">After 19:00 the team had to go — Duilio finished solo: one human holding all coordination in his head, trusting the plan blindly, one agent closing every task unverified. That is why v2 makes the orchestrator a <b style="color:var(--soft)">session, not a person</b> — and why "done" is verified against git evidence, not taken on faith.</div>
+    <div style="font-size:12px;color:var(--dim);margin-top:6px">The challenge ended at 19:00 — with md conflicts still unresolved 12 minutes earlier. Duilio stayed to finish alone, to prove it could work: one human holding all coordination in his head, trusting the plan blindly, one agent closing every task unverified — until he improvised the orchestrator session at 21:51. That is why v2 makes the orchestrator a <b style="color:var(--soft)">session, not a person</b> — and why "done" is verified against git evidence, not taken on faith.</div>
   </div>
 </section>
 
@@ -322,7 +322,7 @@
     <table>
       <tr><th>v2 decision</th><th>What it killed on Sept 18</th></tr>
       <tr><td>log/ = create-only files, filename = headline</td><td>"resolve the md conflicts" ×3 · 9 merge-noise commits · 34/45 commits on shared files</td></tr>
-      <tr><td>orchestrator = sole writer of BOARD + tasks</td><td>stale task list ("I do not trust the current state") · write contention · 3h solo run after 19:00</td></tr>
+      <tr><td>orchestrator = sole writer of BOARD + tasks</td><td>stale task list ("I do not trust the current state") · write contention · 3h solo run past the 19:00 deadline</td></tr>
       <tr><td>agents run git + post log entries autonomously</td><td>23 human git prompts · 7× "aggiorna i docs" · 31 stashes</td></tr>
       <tr><td>status/&lt;handle&gt;.md = session handoff</td><td>"do a recap of what we did for a new chat"</td></tr>
       <tr><td>headline-first reads, ≤10-line bodies, sync script</td><td>81k prompt tokens/turn → ~3k for a full team sync</td></tr>
