@@ -283,8 +283,8 @@
       <div><label>timestamp (auto)</label><input id="g-ts" class="mono" readonly></div>
       <div><label>handle</label>
         <select id="g-h">
-          <option>valeria-fe-agent</option><option>stefano-fs-agent</option>
-          <option>marco-be-agent</option><option>fabio-db-agent</option><option>orchestrator</option>
+          <option>vale-fe-agent</option><option>stefano-fs-agent</option>
+          <option>michele-be-agent</option><option>fabio-db-agent</option><option>orchestrator</option>
         </select></div>
       <div><label>type</label>
         <select id="g-t">
@@ -339,20 +339,20 @@ const io=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return
 document.querySelectorAll('[data-count]').forEach(el=>io.observe(el));
 
 // ---------- conflict storm ----------
-const writers=['val','stef','marco','fabio','duilio'];
+const writers=['vale','stef','michele','fabio','duilio'];
 function place(gSel,xs,ys,labels,colors){const g=document.querySelector(gSel);g.innerHTML='';
-  xs.forEach((x,i)=>{g.innerHTML+=`<circle cx="${x}" cy="${ys[i]}" r="20" fill="#151c24" stroke="${colors[i]}"/>
-    <text x="${x}" y="${ys[i]+4}" fill="${colors[i]}" text-anchor="middle">${labels[i]}</text>`;});}
+  xs.forEach((x,i)=>{g.innerHTML+=`<circle cx="${x}" cy="${ys[i]}" r="24" fill="#151c24" stroke="${colors[i]}"/>
+    <text x="${x}" y="${ys[i]+4}" font-size="11" fill="${colors[i]}" text-anchor="middle">${labels[i]}</text>`;});}
 const wc=['#0ab03f','#4aa3ff','#ffb454','#b48cff','#e6e6e6'];
 place('#w1',[90,150,210,270,330],[60,140,220,300,180],writers,wc);
 const l1=document.querySelector('#l1');
-[60,140,220,300,180].forEach((y,i)=>{l1.innerHTML+=`<line class="ln" x1="110" y1="${y}" x2="640" y2="165" stroke="${wc[i]}" stroke-width="2"/>`;});
+[60,140,220,300,180].forEach((y,i)=>{l1.innerHTML+=`<line class="ln" x1="114" y1="${y}" x2="640" y2="165" stroke="${wc[i]}" stroke-width="2"/>`;});
 place('#w2',[90,150,210,270,330],[60,140,220,300,180],writers,wc);
 const fTargets=[[640,40,'log/ new files'],[640,110,'status/<you>.md'],[640,180,'BOARD.md'],[640,250,'tasks/']];
 const l2=document.querySelector('#l2'),f2=document.querySelector('#f2');
 const map=[0,1,2,0,1]; // writers -> targets (orchestrator-ish visual: duilio->status, etc.)
 [[90,60],[150,140],[210,220],[270,300],[330,180]].forEach((w,i)=>{
-  const t=fTargets[map[i]];l2.innerHTML+=`<line class="ln" x1="${w[0]+20}" y1="${w[1]}" x2="${t[0]}" y2="${t[1]+22}" stroke="${wc[i]}" stroke-width="2"/>`;});
+  const t=fTargets[map[i]];l2.innerHTML+=`<line class="ln" x1="${w[0]+24}" y1="${w[1]}" x2="${t[0]}" y2="${t[1]+22}" stroke="${wc[i]}" stroke-width="2"/>`;});
 fTargets.forEach(t=>{f2.innerHTML+=`<rect x="${t[0]}" y="${t[1]}" width="220" height="44" rx="8" fill="#10161d" stroke="#232d38"/>
   <text x="${t[0]+110}" y="${t[1]+27}" fill="#d2d2d2" text-anchor="middle">${t[2]}</text>`;});
 const b1=document.getElementById('b1'),b2=document.getElementById('b2');
@@ -375,17 +375,17 @@ document.querySelectorAll('.chip').forEach(c=>{const w=c.dataset.w;
   c.onmouseleave=()=>document.querySelectorAll('td.hl').forEach(td=>td.classList.remove('hl'));});
 
 // ---------- simulation ----------
-const A={val:{n:'valeria-fe-agent',c:'#0ab03f'},ste:{n:'stefano-fs-agent',c:'#4aa3ff'},
-  mar:{n:'marco-be-agent',c:'#ffb454'},orch:{n:'orchestrator',c:'#e6e6e6'},cr:{n:'organizers',c:'#ff5252'}};
+const A={val:{n:'vale-fe-agent',c:'#0ab03f'},ste:{n:'stefano-fs-agent',c:'#4aa3ff'},
+  mic:{n:'michele-be-agent',c:'#ffb454'},orch:{n:'orchestrator',c:'#e6e6e6'},cr:{n:'organizers',c:'#ff5252'}};
 const B0={t:'16:00',work:['—'],done:['—'],block:['—'],next:['T10','T11','T12','T14'],head:[]};
 function boardHTML(b){return `# BOARD — refresh ${b.t}\n## Working now\n  ${b.work.join('\n  ')||'(none)'}\n## Done since last refresh\n  ${b.done.join('\n  ')||'(none)'}\n## Blocked / needs decision\n  ${b.block.join('\n  ')||'(none)'}\n## Unclaimed, ready\n  ${b.next.join('  ')||'(none)'}\n## Recent headlines\n  ${b.head.slice(-6).join('\n  ')||'(none)'}`;}
 const SIM=[
  {a:'orch',k:'note',t:'publish 18 task files → docs/tasks/',cap:'Minute 0 — the orchestrator publishes tasks with scope + definition-of-done. The team starts from a draft, not a blank page.'},
- {a:'val',k:'claim',f:'2026-09-18-1605_valeria-fe-agent_claim_T12-attendance-tab.md',cap:'Self-service claim: write it, start immediately. No assignment round-trip, no waiting.'},
+ {a:'val',k:'claim',f:'2026-09-18-1605_vale-fe-agent_claim_T12-attendance-tab.md',cap:'Self-service claim: write it, start immediately. No assignment round-trip, no waiting.'},
  {a:'val',k:'commit',t:'feat(web): attendance tab shell'},
  {a:'val',k:'commit',t:'test(web): 14 tests pass'},
- {a:'val',k:'done',f:'2026-09-18-1631_valeria-fe-agent_done_T12-14-tests-a1f9c2.md',cap:'The AGENT posts the done entry itself — commit + log + status update in one push. The 7× "aggiorna i docs" nag never happens again.'},
- {a:'orch',k:'board',board:{t:'16:40',work:['valeria → T12 ratified'],done:['T12 ✓ verified vs a1f9c2 (14 tests)'],block:['—'],next:['T10','T11','T14'],head:['claim_T12','done_T12']},cap:'Refresh ≤10 min: git log --since + log HEADLINES + status files. ~2–4k tokens, not 81k. "Done" is verified against git evidence, not taken on faith.'},
+ {a:'val',k:'done',f:'2026-09-18-1631_vale-fe-agent_done_T12-14-tests-a1f9c2.md',cap:'The AGENT posts the done entry itself — commit + log + status update in one push. The 7× "aggiorna i docs" nag never happens again.'},
+ {a:'orch',k:'board',board:{t:'16:40',work:['vale → T12 ratified'],done:['T12 ✓ verified vs a1f9c2 (14 tests)'],block:['—'],next:['T10','T11','T14'],head:['claim_T12','done_T12']},cap:'Refresh ≤10 min: git log --since + log HEADLINES + status files. ~2–4k tokens, not 81k. "Done" is verified against git evidence, not taken on faith.'},
  {a:'ste',k:'claim',f:'2026-09-18-1648_stefano-fs-agent_claim_T11-entra-integration.md'},
  {a:'ste',k:'block',f:'2026-09-18-1702_stefano-fs-agent_block_T11-need-tenant-id-from-organizers-pdf.md',cap:'Note the headline: it says WHERE the value lives, never the value. The Entra-ID leak into the shared log never happens again.'},
  {a:'ste',k:'ask',f:'2026-09-18-1704_stefano-fs-agent_ask-orchestrator_T11-live-config-ownership.md'},
@@ -393,13 +393,13 @@ const SIM=[
  {a:'cr',k:'cr',t:'⚡ 17:10 — organizers send a CHANGE REQUEST',cap:'It always happens (it hit at 17:10 on event day; we improvised at 21:51). In v2 it triggers a playbook, not a panic.'},
  {a:'orch',k:'cr',f:'2026-09-18-1712_orchestrator_cr_manager-attendance-scope.md'},
  {a:'orch',k:'decide',f:'2026-09-18-1718_orchestrator_decide_add-T15-T17-CUT-localization.md',cap:'CR playbook: impact analysis → add tasks, CUT scope (never quality), one decide per affected task. Saying what we DROP is the point.'},
- {a:'orch',k:'board',board:{t:'17:20',work:['valeria → T17 (new, from CR)','stefano → T11','marco → T15 (new, from CR)'],done:['T12 ✓'],block:['T11 live-config: decided 17:08'],next:['T10','T14'],head:['cr_...','decide_add-T15-T17','decide_T11']},cap:'Everyone sees their new next step on the board at the next sync. No emergency meeting.'},
- {a:'mar',k:'commit',t:'feat(api): attendance metrics + XLSX'},
- {a:'mar',k:'claim',f:'2026-09-18-1740_marco-be-agent_claim_T14-final-delivery-checks.md'},
- {a:'val',k:'claim',f:'2026-09-18-1741_valeria-fe-agent_claim_T14-final-delivery-checks.md',cap:'Double claim! Optimistic concurrency: collisions are detected and resolved, not prevented by queueing.'},
- {a:'orch',k:'decide',f:'2026-09-18-1746_orchestrator_decide_T14-marco-first-claim-wins.md',cap:'First claim wins unless decided otherwise. Valeria sees it on her next sync and moves on — 5 minutes of loss, not a meeting.'},
+ {a:'orch',k:'board',board:{t:'17:20',work:['vale → T17 (new, from CR)','stefano → T11','michele → T15 (new, from CR)'],done:['T12 ✓'],block:['T11 live-config: decided 17:08'],next:['T10','T14'],head:['cr_...','decide_add-T15-T17','decide_T11']},cap:'Everyone sees their new next step on the board at the next sync. No emergency meeting.'},
+ {a:'mic',k:'commit',t:'feat(api): attendance metrics + XLSX'},
+ {a:'mic',k:'claim',f:'2026-09-18-1740_michele-be-agent_claim_T14-final-delivery-checks.md'},
+ {a:'val',k:'claim',f:'2026-09-18-1741_vale-fe-agent_claim_T14-final-delivery-checks.md',cap:'Double claim! Optimistic concurrency: collisions are detected and resolved, not prevented by queueing.'},
+ {a:'orch',k:'decide',f:'2026-09-18-1746_orchestrator_decide_T14-michele-first-claim-wins.md',cap:'First claim wins unless decided otherwise. Vale sees it on her next sync and moves on — 5 minutes of loss, not a meeting.'},
  {a:'orch',k:'warn',t:'⚠ orchestrator session dies',cap:'Bus factor = 1, and it does not matter. The orchestrator is stateless: everything regenerates from git + log + status.'},
- {a:'orch',k:'board',board:{t:'18:05',work:['valeria → T17','stefano → T11','marco → T14'],done:['T12 ✓','T15 ✓ verified'],block:['—'],next:['T10'],head:['decide_T14','done_T15','claim_T14']},cap:'Anyone boots a replacement with one line: "You are the orchestrator. Follow docs/ORCHESTRATOR.md." The board is a cache, not a database.'},
+ {a:'orch',k:'board',board:{t:'18:05',work:['vale → T17','stefano → T11','michele → T14'],done:['T12 ✓','T15 ✓ verified'],block:['—'],next:['T10'],head:['decide_T14','done_T15','claim_T14']},cap:'Anyone boots a replacement with one line: "You are the orchestrator. Follow docs/ORCHESTRATOR.md." The board is a cache, not a database.'},
  {a:'end',k:'end',t:'DAY COMPLETE',cap:'0 coordination conflicts · 0 human git prompts · ~3k tokens per full-team sync · change request absorbed in ~15 min. That is the whole pitch.'},
 ];
 let si=0,timer=null;
