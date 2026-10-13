@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>One Repo, Five Agents, Zero Conflicts — Team Coordination v2</title>
+<style>
+  :root{
+    --bg:#0b0f14; --bg2:#11161d; --panel:#151c24; --line:#232d38;
+    --ink:#f4f4f4; --dim:#585958; --soft:#d2d2d2;
+    --green:#0ab03f; --green-dk:#0f6425; --red:#ff5252; --amber:#ffb454; --blue:#4aa3ff;
+    --mono:ui-monospace,'Cascadia Code','JetBrains Mono',Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,'Segoe UI',sans-serif}
+  code,.mono{font-family:var(--mono)}
+  header.hero{padding:72px 24px 48px;text-align:center;background:
+    radial-gradient(1200px 500px at 50% -10%, #0f2417 0%, transparent 60%), var(--bg)}
+  .kicker{color:var(--green);letter-spacing:.3em;font-size:12px;text-transform:uppercase}
+  h1{font-size:clamp(28px,5vw,52px);margin:12px 0;line-height:1.15}
+  h1 .zero{color:var(--green)}
+  .sub{color:var(--soft);max-width:720px;margin:8px auto 0}
+  nav{position:sticky;top:0;z-index:50;display:flex;gap:4px;justify-content:center;flex-wrap:wrap;
+    padding:10px 12px;background:rgba(11,15,20,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+  nav a{color:var(--soft);text-decoration:none;font-size:13px;padding:6px 12px;border-radius:999px}
+  nav a:hover{background:var(--panel);color:var(--ink)}
+  section{max-width:1100px;margin:0 auto;padding:64px 20px}
+  h2{font-size:26px;margin-bottom:6px}
+  h2 .n{color:var(--green);font-family:var(--mono);margin-right:8px}
+  .lead{color:var(--soft);margin-bottom:28px;max-width:760px}
+  /* stats */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .stat .v{font-family:var(--mono);font-size:34px;color:var(--red);font-weight:700}
+  .stat .l{color:var(--soft);font-size:13px;margin-top:4px}
+  .stat .e{color:var(--dim);font-size:11px;margin-top:6px}
+  .daybar{margin-top:28px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .daybar .track{position:relative;height:8px;background:var(--line);border-radius:4px;margin:26px 6px 8px}
+  .daybar .tick{position:absolute;top:-4px;transform:translate(-50%,0);width:16px;height:16px;border-radius:50%;
+    background:var(--green);border:3px solid var(--bg)}
+  .daybar .tick.red{background:var(--red)}
+  .daybar .tick span{position:absolute;top:-26px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--soft);white-space:nowrap;font-family:var(--mono)}
+  .daybar .tick.below span{top:auto;bottom:-26px}
+  /* flip */
+  .flip{display:flex;gap:8px;justify-content:center;margin:18px 0}
+  .flip button{background:var(--panel);color:var(--soft);border:1px solid var(--line);border-radius:999px;
+    padding:10px 22px;font-size:14px;cursor:pointer}
+  .flip button.on{background:var(--green);border-color:var(--green);color:#04140a;font-weight:700}
+  .storm{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;position:relative}
+  .storm svg{width:100%;height:auto;display:block}
+  .badge{position:absolute;top:14px;right:16px;font-family:var(--mono);font-size:12px;padding:6px 12px;border-radius:999px}
+  .badge.bad{background:rgba(255,82,82,.12);color:var(--red);border:1px solid var(--red)}
+  .badge.good{background:rgba(10,176,63,.12);color:var(--green);border:1px solid var(--green)}
+  .ln{stroke-dasharray:6 6;animation:flow 1.2s linear infinite}
+  @keyframes flow{to{stroke-dashoffset:-24}}
+  .shake{animation:shake .5s infinite}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-2px)}75%{transform:translateX(2px)}}
+  .hidden{display:none!important}
+  /* system */
+  .sysgrid{display:grid;grid-template-columns:1.1fr 1fr;gap:16px}
+  @media(max-width:860px){.sysgrid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .tree{font-family:var(--mono);font-size:13.5px;line-height:2}
+  .tree .node{cursor:pointer;padding:2px 8px;border-radius:6px}
+  .tree .node:hover{background:#1b2530}
+  .tree .node.sel{background:#1b2b22;color:var(--green)}
+  .tree .dir{color:var(--blue)} .tree .file{color:var(--soft)}
+  #nodedesc{min-height:120px;color:var(--soft);font-size:14px}
+  #nodedesc b{color:var(--ink)}
+  table.matrix{width:100%;border-collapse:collapse;font-size:13.5px}
+  .matrix th,.matrix td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+  .matrix th{color:var(--soft);font-weight:600}
+  .matrix td{font-family:var(--mono);font-size:12.5px}
+  td.hl{background:#1b2b22;color:var(--green)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+  .chip{font-family:var(--mono);font-size:12px;padding:5px 12px;border-radius:999px;border:1px solid var(--line);cursor:default}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+  /* sim */
+  .simctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0}
+  .simctl button{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;
+    padding:8px 16px;cursor:pointer;font-size:14px}
+  .simctl button.main{background:var(--green);color:#04140a;font-weight:700;border-color:var(--green)}
+  .simctl .speed{color:var(--dim);font-size:12px;font-family:var(--mono)}
+  .panels{display:grid;grid-template-columns:1.25fr 1fr 1.25fr;gap:12px}
+  @media(max-width:960px){.panels{grid-template-columns:1fr}}
+  .panel h3{font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);
+    border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:10px}
+  .feed{min-height:340px;max-height:340px;overflow-y:auto;font-family:var(--mono);font-size:12px}
+  .f{padding:4px 8px;border-radius:6px;margin-bottom:4px;border-left:3px solid var(--dim);
+    background:#10161d;animation:pop .3s ease-out;word-break:break-all}
+  @keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+  .f.claim{border-color:var(--blue)} .f.done{border-color:var(--green)}
+  .f.block{border-color:var(--red)} .f.ask{border-color:var(--amber)}
+  .f.decide{border-color:#b48cff} .f.cr{border-color:var(--red);background:#2a1416}
+  .f.note{border-color:var(--dim)}
+  .c{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;margin-bottom:6px;animation:pop .3s}
+  .c .sha{color:var(--amber)}
+  pre.board{font-family:var(--mono);font-size:11.5px;line-height:1.55;color:var(--soft);white-space:pre-wrap;
+    min-height:340px;max-height:340px;overflow-y:auto;background:#10161d;border-radius:8px;padding:10px}
+  pre.board .ok{color:var(--green)}
+  .caption{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--green);
+    border-radius:10px;padding:14px 16px;min-height:64px}
+  .caption .who{font-family:var(--mono);font-size:12px;margin-bottom:4px}
+  .caption.cr{border-left-color:var(--red)}
+  /* grammar */
+  .builder{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:8px}
+  .builder label{font-size:12px;color:var(--dim);display:block;margin-bottom:4px}
+  .builder input,.builder select{width:100%;background:var(--bg2);border:1px solid var(--line);color:var(--ink);
+    border-radius:8px;padding:10px;font-family:var(--mono);font-size:13px}
+  .fname{margin-top:16px;font-family:var(--mono);font-size:15px;background:#10161d;border:1px dashed var(--line);
+    border-radius:10px;padding:16px;word-break:break-all}
+  .warn{margin-top:10px;font-size:13px;min-height:20px}
+  .warn.bad{color:var(--red)} .warn.ok{color:var(--green)}
+  /* boot */
+  .cmd{display:flex;align-items:center;gap:10px;background:#10161d;border:1px solid var(--line);
+    border-radius:10px;padding:12px 14px;margin-bottom:10px;font-family:var(--mono);font-size:13px;flex-wrap:wrap}
+  .cmd button{margin-left:auto;background:var(--panel);border:1px solid var(--line);color:var(--soft);
+    border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px}
+  .cmd button:hover{color:var(--green);border-color:var(--green)}
+  footer{border-top:1px solid var(--line);margin-top:40px}
+  footer table{width:100%;border-collapse:collapse;font-size:13px}
+  footer th,footer td{border-bottom:1px solid var(--line);padding:10px;text-align:left;vertical-align:top}
+  footer th{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.1em}
+  footer td:first-child{color:var(--green);font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+  footer td:last-child{color:var(--soft)}
+  .foot-in{max-width:1100px;margin:0 auto;padding:40px 20px}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="kicker">Team-mi · finals showcase</div>
+  <h1>One repo, five agents,<br><span class="zero">zero conflicts</span></h1>
+  <p class="sub">How we redesigned human+agent team coordination after a hackathon taught us
+  what happens when five writers share two files — and why the fix is structural, not motivational.</p>
+</header>
+
+<nav>
+  <a href="#autopsy">1 · Autopsy</a>
+  <a href="#flip">2 · The fix</a>
+  <a href="#system">3 · The system</a>
+  <a href="#sim">4 · Watch a day run</a>
+  <a href="#grammar">5 · Write a message</a>
+  <a href="#boot">6 · Boot it</a>
+</nav>
+
+<!-- ============ AUTOPSY ============ -->
+<section id="autopsy">
+  <h2><span class="n">01</span>The autopsy — September 18, by the numbers</h2>
+  <p class="lead">We measured our own event: 9 agent sessions, 167 turns, the full git history.
+  The coordination layer we designed became the bottleneck it was meant to prevent.</p>
+  <div class="stats">
+    <div class="stat"><div class="v" data-count="75" data-suffix="%">0</div>
+      <div class="l">of commits touched the two shared md files</div><div class="e">34 of 45 commits · PLAN.md + DISCUSSION.md were the most-edited files in the project — more than any code file</div></div>
+    <div class="stat"><div class="v" data-count="32" data-suffix="%">0</div>
+      <div class="l">of all human prompts were coordination overhead</div><div class="e">53 of 167 turns: "update the docs", "resolve conflicts", "what's next?"</div></div>
+    <div class="stat"><div class="v" data-count="23">0</div>
+      <div class="l">times a human had to tell an agent to do git</div><div class="e">"commit and push please" · agents made only 5 commits themselves · 31 git stashes = dirty-tree-pull loop</div></div>
+    <div class="stat"><div class="v" data-count="81" data-suffix="k">0</div>
+      <div class="l">prompt tokens per agent turn (avg)</div><div class="e">13.5M tokens / 167 turns — the ritual re-read the whole plan+log every turn</div></div>
+    <div class="stat"><div class="v" data-count="3">0</div>
+      <div class="l">rounds of "resolve the md conflicts, merge the info"</div><div class="e">same person, same prompt, three times (18:01, 18:18, 18:48) — it kept re-accumulating</div></div>
+    <div class="stat"><div class="v" data-count="9">0</div>
+      <div class="l">pure merge-noise commits</div><div class="e">"Merge branch 'main' of ..." ×9 of 11 merges · 5 concurrent writers on 2 mutable files</div></div>
+  </div>
+  <div class="daybar">
+    <div style="font-size:13px;color:var(--dim)">Event day — and the moment that decided the finals design:</div>
+    <div class="track">
+      <div class="tick" style="left:2%"><span>15:10 start</span></div>
+      <div class="tick" style="left:28%"><span>16:23 scaffold lands</span></div>
+      <div class="tick red" style="left:48%"><span>17:10 CHANGE REQUEST</span></div>
+      <div class="tick red below" style="left:70%"><span>18:48 still resolving md conflicts</span></div>
+      <div class="tick red below" style="left:96%"><span>21:51 orchestrator improvised</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FLIP ============ -->
+<section id="flip">
+  <h2><span class="n">02</span>The fix is structural — flip the architecture</h2>
+  <p class="lead">v1 relied on discipline ("please append-only, please don't fight over files").
+  Discipline doesn't survive 5 concurrent writers. v2 makes shared-file conflicts
+  <b>impossible by construction</b>: every shared write is either a <b>new file</b> or <b>your own file</b>.</p>
+  <div class="flip">
+    <button id="b1" class="on">v1 — shared files</button>
+    <button id="b2">v2 — one writer per file</button>
+  </div>
+  <div class="storm">
+    <div class="badge bad" id="badge1">CONFLICT ×3 · 34/45 commits · 9 merge-noise</div>
+    <div class="badge good hidden" id="badge2">0 conflicts · by construction</div>
+    <svg id="svg1" viewBox="0 0 900 340">
+      <g font-family="monospace" font-size="13">
+        <g id="w1"></g>
+        <g id="l1"></g>
+        <g class="shake"><rect x="640" y="120" width="220" height="90" rx="10" fill="#2a1416" stroke="#ff5252"/>
+          <text x="750" y="155" fill="#ff5252" text-anchor="middle">PLAN.md</text>
+          <text x="750" y="175" fill="#ff5252" text-anchor="middle">+ DISCUSSION.md</text>
+          <text x="750" y="196" fill="#d2d2d2" text-anchor="middle" font-size="11">← 5 writers, 1 file each</text></g>
+      </g>
+    </svg>
+    <svg id="svg2" class="hidden" viewBox="0 0 900 340">
+      <g font-family="monospace" font-size="13">
+        <g id="w2"></g>
+        <g id="l2"></g>
+        <g id="f2"></g>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<!-- ============ SYSTEM ============ -->
+<section id="system">
+  <h2><span class="n">03</span>The system — click anything</h2>
+  <p class="lead">Five artifacts, one rule each: exactly one writer per file. Click the tree; hover the actors.</p>
+  <div class="sysgrid">
+    <div class="card">
+      <div class="tree" id="tree">
+        <div class="node" data-d="The protocol. Auto-loaded by every coding agent (Copilot, Claude Code, Codex, pi). ≤60 lines: identity boot, startup ritual, write matrix, log grammar, autonomous git, self-service claims. Frozen during the day."><span class="dir">AGENTS.md</span></div>
+        <div class="node" data-d="Identity + instructions for the orchestrator session: refresh cycle (git log --since + log headlines + status files ≈ 2–4k tokens), claim ratification, staleness sweeps, and the change-request playbook. Boot any replacement with one line."><span class="dir">docs/</span></div>
+        <div class="node" style="padding-left:24px" data-d="The orchestrator's system prompt. It never writes code. It is stateless: everything regenerates from git + log + status."><span class="file">ORCHESTRATOR.md</span></div>
+        <div class="node" style="padding-left:24px" data-d="The current state: working-now / done-with-evidence / blocked / unclaimed-next / recent headlines. Regenerated every ≤10 min. A CACHE, not a database — stale board = refresh, never hand-edit."><span class="file">BOARD.md</span></div>
+        <div class="node" style="padding-left:24px" data-d="Task definitions: scope (paths you may write), dependencies, and a definition-of-done concrete enough that the orchestrator can verify 'done' against git evidence without asking. Written at planning time, frozen during the day."><span class="dir">tasks/</span></div>
+        <div class="node" style="padding-left:24px" data-d="One file per message to the team. Appending = creating a file → nobody ever writes the same file twice → conflicts impossible. The filename IS the message: ls docs/log/ is the whole feed, in ~200 tokens."><span class="dir">log/</span></div>
+        <div class="node" style="padding-left:24px" data-d="One file per handle: working-on / done-with-evidence / blocked / handoff. Owner-only writes. This is also the session handoff — 'do a recap for a new chat' becomes 'start a new chat'."><span class="dir">status/</span></div>
+        <div class="node" data-d="sync = one command: git pull --rebase --autostash + status + last 15 log headlines + last 10 commits. setup = pull.rebase + rerere per clone (git replays conflict resolutions it has seen before)."><span class="dir">scripts/</span></div>
+      </div>
+      <div id="nodedesc" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
+        <b>Click a file or folder</b> to see what it is and which failure it kills.
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:12px;letter-spacing:.15em;color:var(--dim);text-transform:uppercase;margin-bottom:10px">Write matrix — hover an actor</h3>
+      <div class="chips">
+        <span class="chip" data-w="orch"><span class="dot" style="background:#e6e6e6"></span>orchestrator</span>
+        <span class="chip" data-w="any"><span class="dot" style="background:var(--green)"></span>any handle</span>
+        <span class="chip" data-w="own"><span class="dot" style="background:var(--blue)"></span>owner only</span>
+        <span class="chip" data-w="all"><span class="dot" style="background:var(--amber)"></span>everyone (in scope)</span>
+      </div>
+      <table class="matrix">
+        <tr><th>Artifact</th><th>Writers</th><th>Rule</th></tr>
+        <tr><td>docs/log/&lt;new file&gt;</td><td class="w-any">create-only</td><td>never edit or delete; corrections = new entry</td></tr>
+        <tr><td>docs/status/&lt;handle&gt;.md</td><td class="w-own">that handle only</td><td>memory + session handoff</td></tr>
+        <tr><td>docs/tasks/*</td><td class="w-orch">orchestrator only</td><td>definitions frozen during the day</td></tr>
+        <tr><td>docs/BOARD.md</td><td class="w-orch">orchestrator only</td><td>cache — regenerate, don't edit</td></tr>
+        <tr><td>code</td><td class="w-all">task scope</td><td>outside your scope → write a log entry</td></tr>
+      </table>
+      <div style="margin-top:14px;font-size:13px;color:var(--dim)">
+        Claims are <b style="color:var(--ink)">self-service</b>: write a <code>claim</code> entry, start immediately.
+        The orchestrator ratifies within ~10 min; double-claims resolve first-writer-wins via a <code>decide</code> entry.
+        Optimistic concurrency — the same trick git itself runs on.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SIM ============ -->
+<section id="sim">
+  <h2><span class="n">04</span>Watch a day run</h2>
+  <p class="lead">A scripted replay of the finals-day protocol — including the change request and a double-claim.
+  Press play, or step through with → (arrow key) and watch the board stay true.</p>
+  <div class="simctl">
+    <button class="main" id="play">▶ Play</button>
+    <button id="step">Step →</button>
+    <button id="reset">Reset</button>
+    <span class="speed" id="speedlbl"></span>
+  </div>
+  <div class="panels">
+    <div class="panel"><h3>docs/log/ — the feed</h3><div class="feed" id="feed"></div></div>
+    <div class="panel"><h3>git — main</h3><div class="feed" id="commits"></div></div>
+    <div class="panel"><h3>docs/BOARD.md — generated</h3><pre class="board" id="board"></pre></div>
+  </div>
+  <div class="caption" id="cap"><span style="color:var(--dim)">Press play. Every event carries the rule that makes it work.</span></div>
+</section>
+
+<!-- ============ GRAMMAR ============ -->
+<section id="grammar">
+  <h2><span class="n">05</span>Write a message — the filename IS the message</h2>
+  <p class="lead">If you can't phrase it in ≤60 kebab-case characters, there is no message. Try to break it —
+  put a secret in the headline and watch.</p>
+  <div class="card">
+    <div class="builder">
+      <div><label>timestamp (auto)</label><input id="g-ts" class="mono" readonly></div>
+      <div><label>handle</label>
+        <select id="g-h">
+          <option>valeria-fe-agent</option><option>stefano-fs-agent</option>
+          <option>marco-be-agent</option><option>fabio-db-agent</option><option>orchestrator</option>
+        </select></div>
+      <div><label>type</label>
+        <select id="g-t">
+          <option>claim</option><option>done</option><option>block</option>
+          <option>ask</option><option>decide</option><option>note</option><option>cr</option>
+        </select></div>
+      <div style="grid-column:1/-1"><label>headline — say the whole thing</label>
+        <input id="g-x" placeholder="e.g. T10-live-BFF-path-naming-mismatch" value="T10-live-BFF-path-naming-mismatch"></div>
+    </div>
+    <div class="fname" id="g-out"></div>
+    <div class="warn" id="g-warn"></div>
+  </div>
+</section>
+
+<!-- ============ BOOT ============ -->
+<section id="boot">
+  <h2><span class="n">06</span>Boot it — the whole protocol is four lines</h2>
+  <p class="lead">Every session starts with one sentence. That's the entire onboarding.</p>
+  <div class="cmd"><span>git clone … && cd repo && .\scripts\setup.ps1</span><button data-c>copy</button></div>
+  <div class="cmd"><span>I am &lt;name&gt;, &lt;role&gt;. Follow AGENTS.md.</span><button data-c>copy</button></div>
+  <div class="cmd"><span>You are the orchestrator. Follow docs/ORCHESTRATOR.md.</span><button data-c>copy</button></div>
+  <div class="cmd"><span>scripts/sync</span><button data-c>copy</button></div>
+  <p style="color:var(--dim);font-size:13px;margin-top:10px">The orchestrator is the cheapest session by design
+  (headlines + git diffs, ~2–4k tokens per refresh) — its real requirement is uptime, not credits. If it dies,
+  anyone boots a new one with line 3. Nothing is lost: the board is a cache.</p>
+</section>
+
+<footer>
+  <div class="foot-in">
+    <h2 style="font-size:18px;margin-bottom:16px">Every decision traces to a measurement</h2>
+    <table>
+      <tr><th>v2 decision</th><th>What it killed on Sept 18</th></tr>
+      <tr><td>log/ = create-only files, filename = headline</td><td>"resolve the md conflicts" ×3 · 9 merge-noise commits · 34/45 commits on shared files</td></tr>
+      <tr><td>orchestrator = sole writer of BOARD + tasks</td><td>stale task list ("I do not trust the current state") · write contention</td></tr>
+      <tr><td>agents run git + post log entries autonomously</td><td>23 human git prompts · 7× "aggiorna i docs" · 31 stashes</td></tr>
+      <tr><td>status/&lt;handle&gt;.md = session handoff</td><td>"do a recap of what we did for a new chat"</td></tr>
+      <tr><td>headline-first reads, ≤10-line bodies, sync script</td><td>81k prompt tokens/turn → ~3k for a full team sync</td></tr>
+      <tr><td>self-service claims + ratify</td><td>18 "what's next?" prompts — without adding wait time</td></tr>
+      <tr><td>CR playbook at minute 0</td><td>the 17:10 ambush improvised at 21:51</td></tr>
+      <tr><td>"record where the value lives, never the value"</td><td>Entra tenant/client IDs leaked into DISCUSSION.md</td></tr>
+    </table>
+    <p style="color:var(--dim);font-size:12px;margin-top:20px">Built by team-mi · analysis of 9 chat exports / 167 agent turns / 45 commits · finals-ready</p>
+  </div>
+</footer>
+
+<script>
+// ---------- count-up ----------
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;
+  const el=e.target,t=+el.dataset.count,s=el.dataset.suffix||'',d=900,st=performance.now();
+  (function f(n){const p=Math.min((n-st)/d,1);el.textContent=Math.round(t*(1-Math.pow(1-p,3)))+s;
+    if(p<1)requestAnimationFrame(f);})(st);io.unobserve(el);}),{threshold:.4});
+document.querySelectorAll('[data-count]').forEach(el=>io.observe(el));
+
+// ---------- conflict storm ----------
+const writers=['val','stef','marco','fabio','duilio'];
+function place(gSel,xs,ys,labels,colors){const g=document.querySelector(gSel);g.innerHTML='';
+  xs.forEach((x,i)=>{g.innerHTML+=`<circle cx="${x}" cy="${ys[i]}" r="20" fill="#151c24" stroke="${colors[i]}"/>
+    <text x="${x}" y="${ys[i]+4}" fill="${colors[i]}" text-anchor="middle">${labels[i]}</text>`;});}
+const wc=['#0ab03f','#4aa3ff','#ffb454','#b48cff','#e6e6e6'];
+place('#w1',[90,150,210,270,330],[60,140,220,300,180],writers,wc);
+const l1=document.querySelector('#l1');
+[60,140,220,300,180].forEach((y,i)=>{l1.innerHTML+=`<line class="ln" x1="110" y1="${y}" x2="640" y2="165" stroke="${wc[i]}" stroke-width="2"/>`;});
+place('#w2',[90,150,210,270,330],[60,140,220,300,180],writers,wc);
+const fTargets=[[640,40,'log/ new files'],[640,110,'status/<you>.md'],[640,180,'BOARD.md'],[640,250,'tasks/']];
+const l2=document.querySelector('#l2'),f2=document.querySelector('#f2');
+const map=[0,1,2,0,1]; // writers -> targets (orchestrator-ish visual: duilio->status, etc.)
+[[90,60],[150,140],[210,220],[270,300],[330,180]].forEach((w,i)=>{
+  const t=fTargets[map[i]];l2.innerHTML+=`<line class="ln" x1="${w[0]+20}" y1="${w[1]}" x2="${t[0]}" y2="${t[1]+22}" stroke="${wc[i]}" stroke-width="2"/>`;});
+fTargets.forEach(t=>{f2.innerHTML+=`<rect x="${t[0]}" y="${t[1]}" width="220" height="44" rx="8" fill="#10161d" stroke="#232d38"/>
+  <text x="${t[0]+110}" y="${t[1]+27}" fill="#d2d2d2" text-anchor="middle">${t[2]}</text>`;});
+const b1=document.getElementById('b1'),b2=document.getElementById('b2');
+function flip(v2){b1.classList.toggle('on',!v2);b2.classList.toggle('on',v2);
+  document.getElementById('svg1').classList.toggle('hidden',v2);
+  document.getElementById('svg2').classList.toggle('hidden',!v2);
+  document.getElementById('badge1').classList.toggle('hidden',v2);
+  document.getElementById('badge2').classList.toggle('hidden',!v2);}
+b1.onclick=()=>flip(false);b2.onclick=()=>flip(true);
+
+// ---------- tree ----------
+const nd=document.getElementById('nodedesc');
+document.querySelectorAll('#tree .node').forEach(n=>n.onclick=()=>{
+  document.querySelectorAll('#tree .node').forEach(x=>x.classList.remove('sel'));
+  n.classList.add('sel');nd.innerHTML='<b>'+n.textContent.trim()+'</b><br>'+n.dataset.d;});
+
+// ---------- matrix hover ----------
+document.querySelectorAll('.chip').forEach(c=>{const w=c.dataset.w;
+  c.onmouseenter=()=>document.querySelectorAll('.w-'+w).forEach(td=>td.classList.add('hl'));
+  c.onmouseleave=()=>document.querySelectorAll('td.hl').forEach(td=>td.classList.remove('hl'));});
+
+// ---------- simulation ----------
+const A={val:{n:'valeria-fe-agent',c:'#0ab03f'},ste:{n:'stefano-fs-agent',c:'#4aa3ff'},
+  mar:{n:'marco-be-agent',c:'#ffb454'},orch:{n:'orchestrator',c:'#e6e6e6'},cr:{n:'organizers',c:'#ff5252'}};
+const B0={t:'16:00',work:['—'],done:['—'],block:['—'],next:['T10','T11','T12','T14'],head:[]};
+function boardHTML(b){return `# BOARD — refresh ${b.t}\n## Working now\n  ${b.work.join('\n  ')||'(none)'}\n## Done since last refresh\n  ${b.done.join('\n  ')||'(none)'}\n## Blocked / needs decision\n  ${b.block.join('\n  ')||'(none)'}\n## Unclaimed, ready\n  ${b.next.join('  ')||'(none)'}\n## Recent headlines\n  ${b.head.slice(-6).join('\n  ')||'(none)'}`;}
+const SIM=[
+ {a:'orch',k:'note',t:'publish 18 task files → docs/tasks/',cap:'Minute 0 — the orchestrator publishes tasks with scope + definition-of-done. The team starts from a draft, not a blank page.'},
+ {a:'val',k:'claim',f:'2026-09-18-1605_valeria-fe-agent_claim_T12-attendance-tab.md',cap:'Self-service claim: write it, start immediately. No assignment round-trip, no waiting.'},
+ {a:'val',k:'commit',t:'feat(web): attendance tab shell'},
+ {a:'val',k:'commit',t:'test(web): 14 tests pass'},
+ {a:'val',k:'done',f:'2026-09-18-1631_valeria-fe-agent_done_T12-14-tests-a1f9c2.md',cap:'The AGENT posts the done entry itself — commit + log + status update in one push. The 7× "aggiorna i docs" nag never happens again.'},
+ {a:'orch',k:'board',board:{t:'16:40',work:['valeria → T12 ratified'],done:['T12 ✓ verified vs a1f9c2 (14 tests)'],block:['—'],next:['T10','T11','T14'],head:['claim_T12','done_T12']},cap:'Refresh ≤10 min: git log --since + log HEADLINES + status files. ~2–4k tokens, not 81k. "Done" is verified against git evidence, not taken on faith.'},
+ {a:'ste',k:'claim',f:'2026-09-18-1648_stefano-fs-agent_claim_T11-entra-integration.md'},
+ {a:'ste',k:'block',f:'2026-09-18-1702_stefano-fs-agent_block_T11-need-tenant-id-from-organizers-pdf.md',cap:'Note the headline: it says WHERE the value lives, never the value. The Entra-ID leak into the shared log never happens again.'},
+ {a:'ste',k:'ask',f:'2026-09-18-1704_stefano-fs-agent_ask-orchestrator_T11-live-config-ownership.md'},
+ {a:'orch',k:'decide',f:'2026-09-18-1708_orchestrator_decide_T11-stefano-keeps-live-config.md',cap:'Any ask older than one cycle gets a decide. Nobody idles waiting for a human to remember to ask a human.'},
+ {a:'cr',k:'cr',t:'⚡ 17:10 — organizers send a CHANGE REQUEST',cap:'It always happens (it hit at 17:10 on event day; we improvised at 21:51). In v2 it triggers a playbook, not a panic.'},
+ {a:'orch',k:'cr',f:'2026-09-18-1712_orchestrator_cr_manager-attendance-scope.md'},
+ {a:'orch',k:'decide',f:'2026-09-18-1718_orchestrator_decide_add-T15-T17-CUT-localization.md',cap:'CR playbook: impact analysis → add tasks, CUT scope (never quality), one decide per affected task. Saying what we DROP is the point.'},
+ {a:'orch',k:'board',board:{t:'17:20',work:['valeria → T17 (new, from CR)','stefano → T11','marco → T15 (new, from CR)'],done:['T12 ✓'],block:['T11 live-config: decided 17:08'],next:['T10','T14'],head:['cr_...','decide_add-T15-T17','decide_T11']},cap:'Everyone sees their new next step on the board at the next sync. No emergency meeting.'},
+ {a:'mar',k:'commit',t:'feat(api): attendance metrics + XLSX'},
+ {a:'mar',k:'claim',f:'2026-09-18-1740_marco-be-agent_claim_T14-final-delivery-checks.md'},
+ {a:'val',k:'claim',f:'2026-09-18-1741_valeria-fe-agent_claim_T14-final-delivery-checks.md',cap:'Double claim! Optimistic concurrency: collisions are detected and resolved, not prevented by queueing.'},
+ {a:'orch',k:'decide',f:'2026-09-18-1746_orchestrator_decide_T14-marco-first-claim-wins.md',cap:'First claim wins unless decided otherwise. Valeria sees it on her next sync and moves on — 5 minutes of loss, not a meeting.'},
+ {a:'orch',k:'warn',t:'⚠ orchestrator session dies',cap:'Bus factor = 1, and it does not matter. The orchestrator is stateless: everything regenerates from git + log + status.'},
+ {a:'orch',k:'board',board:{t:'18:05',work:['valeria → T17','stefano → T11','marco → T14'],done:['T12 ✓','T15 ✓ verified'],block:['—'],next:['T10'],head:['decide_T14','done_T15','claim_T14']},cap:'Anyone boots a replacement with one line: "You are the orchestrator. Follow docs/ORCHESTRATOR.md." The board is a cache, not a database.'},
+ {a:'end',k:'end',t:'DAY COMPLETE',cap:'0 coordination conflicts · 0 human git prompts · ~3k tokens per full-team sync · change request absorbed in ~15 min. That is the whole pitch.'},
+];
+let si=0,timer=null;
+const feed=document.getElementById('feed'),comm=document.getElementById('commits'),
+  board=document.getElementById('board'),cap=document.getElementById('cap');
+board.textContent=boardHTML(B0);
+function sha(){return Math.random().toString(16).slice(2,8);}
+function apply(e){
+  if(e.k==='end'){cap.className='caption';cap.innerHTML='<span class="who" style="color:var(--green)">DAY COMPLETE</span><br>'+e.cap;stop();return;}
+  const a=A[e.a];
+  if(e.k==='warn'){cap.className='caption cr';cap.innerHTML=`<span class="who" style="color:${a.c}">${a.n}</span> ${e.t}<br><span style="color:var(--soft)">${e.cap}</span>`;return;}
+  if(e.k==='cr'&&e.a==='cr'){cap.className='caption cr';cap.innerHTML=`<span class="who" style="color:${a.c}">${a.n}</span> ${e.t}<br><span style="color:var(--soft)">${e.cap}</span>`;return;}
+  if(e.f){const d=document.createElement('div');d.className='f '+e.k;d.textContent=e.f;feed.appendChild(d);feed.scrollTop=1e9;}
+  if(e.t&&e.k==='commit'){const d=document.createElement('div');d.className='c';
+    d.innerHTML=`<span class="dot" style="background:${a.c}"></span><span class="sha">${sha()}</span> ${e.t}`;
+    comm.appendChild(d);comm.scrollTop=1e9;}
+  if(e.k==='board'){board.textContent=boardHTML(e.board);}
+  if(e.cap){cap.className='caption'+(e.k==='cr'?' cr':'');
+    cap.innerHTML=`<span class="who" style="color:${a.c}">${a.n}</span> ${e.f?e.f.split('_').slice(2).join(' '):e.t||''}<br><span style="color:var(--soft)">${e.cap}</span>`;}
+}
+function step(){if(si>=SIM.length){stop();return;}apply(SIM[si++]);speed();}
+function speed(){const el=SIM[si-1];const ms=el&&el.k==='commit'?700:1600;
+  if(timer){clearTimeout(timer);timer=setTimeout(step,ms);}}
+function play(){if(timer)return;timer=setTimeout(step,300);document.getElementById('play').textContent='⏸ Pause';}
+function stop(){clearTimeout(timer);timer=null;document.getElementById('play').textContent='▶ Play';}
+document.getElementById('play').onclick=()=>timer?stop():play();
+document.getElementById('step').onclick=()=>{stop();step();};
+document.getElementById('reset').onclick=()=>{stop();si=0;feed.innerHTML='';comm.innerHTML='';
+  board.textContent=boardHTML(B0);cap.className='caption';
+  cap.innerHTML='<span style="color:var(--dim)">Press play. Every event carries the rule that makes it work.</span>';};
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'){stop();step();}});
+
+// ---------- grammar builder ----------
+const ts=new Date(),pad=n=>String(n).padStart(2,'0');
+document.getElementById('g-ts').value=`${ts.getFullYear()}-${pad(ts.getMonth()+1)}-${pad(ts.getDate())}-${pad(ts.getHours())}${pad(ts.getMinutes())}`;
+function build(){const t=document.getElementById('g-ts').value,h=document.getElementById('g-h').value,
+  ty=document.getElementById('g-t').value;
+  let x=document.getElementById('g-x').value.trim().replace(/\s+/g,'-').replace(/-+/g,'-');
+  const out=document.getElementById('g-out'),w=document.getElementById('g-warn');
+  out.innerHTML=`<span style="color:var(--dim)">${t}_</span><span style="color:var(--green)">${h}_</span><span style="color:var(--blue)">${ty}_</span><span style="color:var(--soft)">${x||'headline-goes-here'}.md</span>`;
+  const secret=/(secret|token|password|api[-_]?key|tenant|[0-9a-f]{8}-[0-9a-f]{4})/i.test(x);
+  if(secret){w.className='warn bad';w.textContent='⛔ looks like a secret/ID — record WHERE the value lives, never the value (this leaked Entra IDs on event day)';}
+  else if(x.length>60){w.className='warn bad';w.textContent=`⚠ headline is ${x.length} chars — if you can't say it in 60, there is no message`;
+  }else if(!x){w.className='warn';w.textContent='';}
+  else{w.className='warn ok';w.textContent='✓ valid — this file appears in everyone\'s feed as a one-line headline'}}
+['g-h','g-t','g-x'].forEach(id=>document.getElementById(id).addEventListener('input',build));
+build();
+
+// ---------- copy ----------
+document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{
+  navigator.clipboard.writeText(b.parentElement.querySelector('span').textContent);
+  b.textContent='copied ✓';setTimeout(()=>b.textContent='copy',1200);});
+</script>
+</body>
+</html>
