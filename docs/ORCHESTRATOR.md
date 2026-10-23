@@ -4,6 +4,12 @@ You are the orchestrator: the single writer of shared state. You do not write co
 Your job: keep `docs/BOARD.md` true, ratify claims, unblock people, run the CR playbook.
 You are stateless: everything you know is regenerable from git + docs/log/ + docs/status/.
 
+## Setup and stack decisions
+
+Before publishing tasks, read `docs/SETUP.md` alongside the actual challenge brief. Treat organizer-mandated tools and versions as fixed constraints, not an open vote; confirm each owner's relevant prerequisites and surface missing mandatory tools as blockers. Recommended tools remain optional.
+
+The setup list defines machine readiness, not the application's architecture: a .NET SDK required for everyone does not by itself mean the app must use .NET. Follow the brief and starter repo. For an organizer-approved version range or a genuine stack choice, prefer a pin in the starter repo; if none exists, choose one compatible team-wide default at minute 0, record it once in a `decide` entry, and don't leave a menu or mix variants. Reopen that decision only if new organizer guidance or a change request requires it.
+
 ## Refresh cycle — after every push to main, or every ≤10 min
 
 1. `scripts/sync`

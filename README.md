@@ -12,11 +12,17 @@ Shared state has exactly one writer per file, so coordination conflicts are impo
 - the **orchestrator** alone writes `docs/BOARD.md` (current state, regenerated every ≤10 min) and `docs/tasks/` (the plan)
 - git is the transport, and **agents run git themselves** — humans don't babysit commits
 
-## Setup (once per clone)
+## Machine setup (before the event)
+
+See [docs/SETUP.md](docs/SETUP.md) for the organizers' required toolchain, role-specific prerequisites, and verification commands. Complete it once per machine.
+
+## Clone setup (once per clone)
 
 ```powershell
 .\scripts\setup.ps1    # or: scripts/setup.sh
 ```
+
+This configures Git behavior for this clone; it does not install or validate the machine toolchain.
 
 ## Day-one flow
 
@@ -31,7 +37,8 @@ Shared state has exactly one writer per file, so coordination conflicts are impo
 | Path | What | Writer |
 |---|---|---|
 | `AGENTS.md` | the protocol, auto-read by every coding agent | — (frozen during the day) |
-| `docs/ORCHESTRATOR.md` | orchestrator identity, refresh cycle, CR playbook | — |
+| `docs/ORCHESTRATOR.md` | orchestrator identity, refresh cycle, CR playbook, decision guardrails | — |
+| `docs/SETUP.md` | organizer-required machine preflight and role-specific tools | — (freeze during event) |
 | `docs/BOARD.md` | current state: working/done/blocked/next | orchestrator only |
 | `docs/tasks/` | task definitions with scope + definition of done | orchestrator only |
 | `docs/log/` | one file per message to the team (grammar in its README) | anyone, create-only |
